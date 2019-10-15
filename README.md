@@ -10,11 +10,11 @@
         &lt;dependency&gt;
             &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
             &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
-            &lt;version&gt;1.54</version&gt;
+            &lt;version&gt;1.54&lt;/version&gt;
         &lt;/dependency&gt;
     </code></pre>
 * 2、创建协议工厂
-* 3、![Image text](https://github.com/Vico-cuiym/HttpToHttps.github.io/blob/master/imgs/Ctrl%2BR.png)
+* 3、
 ```java
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
