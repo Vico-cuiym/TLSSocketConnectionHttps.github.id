@@ -6,12 +6,13 @@
 
 ## 本地配置
 * 1、引入依赖 <br>
-    <pre><code>&lt;dependency&gt;
-            &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
-            &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
-            &lt;version&gt;1.54&lt;/version&gt;
-        &lt;/dependency&gt;
-    </code></pre>
+<pre><code>
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
+        &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
+        &lt;version&gt;1.54&lt;/version&gt;
+    &lt;/dependency&gt;
+</code></pre>
 * 2、创建协议工厂
 * 3、
 ```java
