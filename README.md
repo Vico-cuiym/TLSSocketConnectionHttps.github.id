@@ -1,7 +1,7 @@
 
 # JDK1.6支持TLS1.2协议,并忽略身份验证
 TLS1.2升级成TLS1.1,项目中的区别,就访问时由HTTP变成了HTTPS.JDK1.6其实不支持TLS1.2,默认由TLS1.1访问请求.JDK1.8默认TLS1.2,比较简单的方案是升级JDK,但是对于老项目,升级JDK无非是挑灯上厕所.在不能升级JDK的情况下,可以使用一下方式
-##不得不说的JDK和TLS的爱恨情仇
+## 不得不说的JDK和TLS的爱恨情仇
 ![Image text](https://github.com/Vico-cuiym/TLSSocketConnectionHttps.github.io/blob/master/com/img/JDK%E5%92%8CTLS%E7%9A%84%E7%88%B1%E6%81%A8%E6%83%85%E4%BB%87.png)
 ## 调用详细步骤
 * 1、引入依赖 <br>
