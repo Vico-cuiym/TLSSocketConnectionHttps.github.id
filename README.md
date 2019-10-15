@@ -12,7 +12,6 @@
         &lt;version&gt;1.54&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
 * 2、创建协议工厂
-* 3、
 ```java
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -233,7 +232,7 @@ public class TLSSocketConnectionFactory extends SSLSocketFactory  {
         };
     }
 }
-
+* 3、
 
 
 
