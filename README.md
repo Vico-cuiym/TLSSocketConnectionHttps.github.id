@@ -232,8 +232,103 @@ public class TLSSocketConnectionFactory extends SSLSocketFactory  {
         };
     }
 }
-* 3、
+```
+* 3、书写POST调用工具
+```java
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import com.bsoft.cotroller.gp.gpqy.bean.AppResult;
+import com.bsoft.cotroller.gp.gpqy.bean.Result;
+
+public class HttpUtils {
+	
+	/**
+	 * 使用POST方法直接调用
+	 * @param urlPath	访问的http请求地址
+	 * @param param		json格式的字符串，后期可以修改成map等格式的，只需要转换成byte数组
+	 * @return					页面返回的结果值
+	 * @throws IOException
+	 */
+	public static String httpsPostData(String urlPath,String param) throws IOException{
+	    String result = null;
+	    URL url = null;
+	    HttpsURLConnection httpurlconnection = null;
+	    BufferedReader reader = null;
+	    try{
+	    	//创建URL地址的链接
+	        url = new URL(urlPath);
+	        //打开链接
+	        httpurlconnection = (HttpsURLConnection) url.openConnection();
+	        //设置SSL
+	        httpurlconnection.setSSLSocketFactory(new TLSSocketConnectionFactory());
+	        httpurlconnection.setDoInput(true);
+	        httpurlconnection.setDoOutput(true);
+	        httpurlconnection.setRequestMethod("POST");
+	        httpurlconnection.setInstanceFollowRedirects(true);
+	        httpurlconnection.setRequestProperty("Content-type", "application/json;charset=UTF-8");
+	        String charset = "UTF-8";
+	        httpurlconnection.setHostnameVerifier(new HostnameVerifier() {
+				@Override
+				public boolean verify(String arg0, SSLSession arg1) {
+					return false;
+				}
+			});
+			httpurlconnection.connect(); 
+			byte[] bypes = param.getBytes();
+			httpurlconnection.getOutputStream().write(bypes);// 输入参数
+			int code = httpurlconnection.getResponseCode(); 
+			if (code == 200) { // 读取响应 // 
+				Pattern pattern = Pattern.compile("charset=\\S*");
+	            Matcher matcher = pattern.matcher(httpurlconnection.getContentType());
+	            if (matcher.find()) {
+	                charset = matcher.group().replace("charset=", "");
+	            }
+				InputStream is = httpurlconnection.getInputStream(); 
+				reader = new BufferedReader(new InputStreamReader(is,charset)); 
+				String line = reader.readLine(); 
+				StringBuilder builder = new StringBuilder(); 
+				while (line != null) {
+					builder.append(line+"\n");
+					line = reader.readLine(); 
+				}
+				result = builder.toString();
+			}  
+		} catch (Exception e) { 
+			e.printStackTrace(); 
+		} finally { 
+			url = null; 
+			if (httpurlconnection != null) { 
+				httpurlconnection.disconnect(); 
+			} 
+			try {
+				if (reader != null) { 
+					reader.close(); 
+				}
+			} catch (IOException e) { 
+				// TODO 
+			} 
+		} 
+		return result;
+	}
+}
+```
 
 
 # 🚨以下为参考文档🚨
