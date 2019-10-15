@@ -1,10 +1,10 @@
 # JDK1.6支持TLS1.2协议,并忽略身份验证
-
-* TLS1.2升级成TLS1.1,项目中的区别,就访问时由HTTP变成了HTTPS
-* JDK1.6其实不支持TLS1.2,默认由TLS1.1访问请求.JDK1.8默认TLS1.2,比较简单的方案是升级JDK,但是对于老项目,升级JDK无非是
-* 挑灯上厕所.在不能升级JDK的情况下,可以使用一下方式
-
-## 本地配置
+TLS1.2升级成TLS1.1,项目中的区别,就访问时由HTTP变成了HTTPS
+JDK1.6其实不支持TLS1.2,默认由TLS1.1访问请求.JDK1.8默认TLS1.2,比较简单的方案是升级JDK,但是对于老项目,升级JDK无非是<br>
+挑灯上厕所.在不能升级JDK的情况下,可以使用一下方式
+##不得不说的JDK和TLS的爱恨情仇
+![Image text](https://github.com/Vico-cuiym/TLSSocketConnectionHttps.github.io/blob/master/com/img/JDK%E5%92%8CTLS%E7%9A%84%E7%88%B1%E6%81%A8%E6%83%85%E4%BB%87.png)
+## 调用详细步骤
 * 1、引入依赖 <br>
 <pre><code>&lt;dependency&gt;
         &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
@@ -235,106 +235,113 @@ public class TLSSocketConnectionFactory extends SSLSocketFactory  {
 ```
 * 3、书写POST调用工具
 ```java
+import org.apache.http.Consts;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
+import java.io.*;
+import java.net.URL;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+public class HttpsUtils {
+    /**
+     * content-type类型为xml方式发送post请求
+     *
+     * @param urlPath
+     * @param data
+     * @param charSet
+     * @return
+     */
+    public static String postXml(String urlPath, String data, String charSet) {
+        String result = httpPostData(urlPath, data, charSet, null, "application/xml", "application/xml");
+        return result;
+    }
 
-import com.bsoft.cotroller.gp.gpqy.bean.AppResult;
-import com.bsoft.cotroller.gp.gpqy.bean.Result;
+    private static String httpPostData(String urlPath, String data, String charSet, String[] header, String contentType, String accpect) {
+        String result = null;
+        URL url = null;
+        HttpsURLConnection httpurlconnection = null;
+        OutputStreamWriter out = null;
+        BufferedReader reader = null;
+        try {
+            url = new URL(urlPath);
+            httpurlconnection = (HttpsURLConnection) url.openConnection();
+            httpurlconnection.setSSLSocketFactory(new TSLSocketConnectionFactory());
+            httpurlconnection.setDoInput(true);
+            httpurlconnection.setDoOutput(true);
 
-public class HttpUtils {
-	
-	/**
-	 * 使用POST方法直接调用
-	 * @param urlPath	访问的http请求地址
-	 * @param param		json格式的字符串，后期可以修改成map等格式的，只需要转换成byte数组
-	 * @return					页面返回的结果值
-	 * @throws IOException
-	 */
-	public static String httpsPostData(String urlPath,String param) throws IOException{
-	    String result = null;
-	    URL url = null;
-	    HttpsURLConnection httpurlconnection = null;
-	    BufferedReader reader = null;
-	    try{
-	    	//创建URL地址的链接
-	        url = new URL(urlPath);
-	        //打开链接
-	        httpurlconnection = (HttpsURLConnection) url.openConnection();
-	        //设置SSL
-	        httpurlconnection.setSSLSocketFactory(new TLSSocketConnectionFactory());
-	        httpurlconnection.setDoInput(true);
-	        httpurlconnection.setDoOutput(true);
-	        httpurlconnection.setRequestMethod("POST");
-	        httpurlconnection.setInstanceFollowRedirects(true);
-	        httpurlconnection.setRequestProperty("Content-type", "application/json;charset=UTF-8");
-	        String charset = "UTF-8";
-	        httpurlconnection.setHostnameVerifier(new HostnameVerifier() {
-				@Override
-				public boolean verify(String arg0, SSLSession arg1) {
-					return false;
-				}
-			});
-			httpurlconnection.connect(); 
-			byte[] bypes = param.getBytes();
-			httpurlconnection.getOutputStream().write(bypes);// 输入参数
-			int code = httpurlconnection.getResponseCode(); 
-			if (code == 200) { // 读取响应 // 
-				Pattern pattern = Pattern.compile("charset=\\S*");
-	            Matcher matcher = pattern.matcher(httpurlconnection.getContentType());
-	            if (matcher.find()) {
-	                charset = matcher.group().replace("charset=", "");
-	            }
-				InputStream is = httpurlconnection.getInputStream(); 
-				reader = new BufferedReader(new InputStreamReader(is,charset)); 
-				String line = reader.readLine(); 
-				StringBuilder builder = new StringBuilder(); 
-				while (line != null) {
-					builder.append(line+"\n");
-					line = reader.readLine(); 
-				}
-				result = builder.toString();
-			}  
-		} catch (Exception e) { 
-			e.printStackTrace(); 
-		} finally { 
-			url = null; 
-			if (httpurlconnection != null) { 
-				httpurlconnection.disconnect(); 
-			} 
-			try {
-				if (reader != null) { 
-					reader.close(); 
-				}
-			} catch (IOException e) { 
-				// TODO 
-			} 
-		} 
-		return result;
-	}
-}
+            if (header != null) {
+                for (int i = 0; i < header.length; i++) {
+                    String[] content = header[i].split(":");
+                    httpurlconnection.setRequestProperty(content[0], content[1]);
+                }
+            }
+
+            httpurlconnection.setRequestMethod("POST");
+            httpurlconnection.setRequestProperty("Content-Type", contentType);
+            if (null != accpect) {
+                httpurlconnection.setRequestProperty("Accpect", accpect);
+            }
+
+            httpurlconnection.connect();
+            out = new OutputStreamWriter(httpurlconnection.getOutputStream(), charSet); // utf-8编码
+            out.append(data);
+            out.flush();
+            out.close();
+
+            int code = httpurlconnection.getResponseCode();
+
+            if (code == 200) {
+                // 读取响应
+                int length = (int) httpurlconnection.getContentLength();// 获取长度
+                InputStream is = httpurlconnection.getInputStream();
+                reader = new BufferedReader(new InputStreamReader(is));
+                String line = reader.readLine();
+                StringBuilder builder = new StringBuilder();
+                while (line != null) {
+                    builder.append(line);
+                    line = reader.readLine();
+                }
+                result = builder.toString();
+            } else {
+                // TODO
+            }
+        } catch (Exception e) {
+            // TODO
+        } finally {
+            url = null;
+            if (httpurlconnection != null) {
+                httpurlconnection.disconnect();
+            }
+            try {
+                if (out != null) {
+                    out.close();
+                }
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                // TODO
+            }
+        }
+        return result;
+    }
 ```
-
+4、调用示例
+```java
+public static void main(String[] args) throws Exception {
+        String dtdXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?><!DOCTYPE cXML SYSTEM \"http://xml.cxml.org/schemas/cXML/1.2.014/cXML.dtd\"><cXML timestamp=\"2017-01-19T19:56:30\" payloadID=\"bac4b4a82e3342da919c7b427ee0fef2\"><Header><From><Credential domain=\"NetworkID\"><Identity>JDVEP4DIDI</Identity></Credential></From><To><Credential domain=\"NetworkID\"><Identity>Didipur</Identity></Credential></To><Sender><Credential domain=\"NetworkID\"><Identity>JDVEP4DIDI</Identity><SharedSecret>OGNmNGM3OGYtNWJhYi00ZTUwLTk0YTYtODAwZDVmYTU4NjMx</SharedSecret></Credential><UserAgent>JD VEP</UserAgent></Sender></Header><Message><PunchOutOrderMessage><BuyerCookie>3e3e68a280f45796cc24e59573e88ef7</BuyerCookie><PunchOutOrderMessageHeader operationAllowed=\"edit\"><Total><Money currency=\"CNY\">102.00</Money></Total><Shipping><Money currency=\"CNY\">0.00</Money><Description xml:lang=\"zh-CN\">运费</Description></Shipping></PunchOutOrderMessageHeader><ItemIn quantity=\"1\"><ItemID><SupplierPartID>102196</SupplierPartID><SupplierPartAuxiliaryID>46666778472</SupplierPartAuxiliaryID></ItemID><ItemDetail><UnitPrice><Money currency=\"CNY\">102.00</Money></UnitPrice><Description xml:lang=\"zh-CN\">维氏VICTORINOX瑞士军刀星座系列双鱼座0.6223.2PISC</Description><UnitOfMeasure>EA</UnitOfMeasure></ItemDetail></ItemIn><ItemIn quantity=\"1\"><ItemID><SupplierPartID>150706</SupplierPartID><SupplierPartAuxiliaryID>46666778472</SupplierPartAuxiliaryID></ItemID><ItemDetail><UnitPrice><Money currency=\"CNY\">0.00</Money></UnitPrice><Description xml:lang=\"zh-CN\">锐步Reebok女短袖T恤R537589 M码</Description><UnitOfMeasure>EA</UnitOfMeasure></ItemDetail></ItemIn></PunchOutOrderMessage></Message></cXML>";
+        String url = "https://www.baidu.com";
+        String result = "";
+        result = httpPostData(url, dtdXml, Consts.UTF_8.name(), null, "application/xml", "application/xml");
+        System.out.println(result);
+    }
+```
 
 # 🚨以下为参考文档🚨
 [TLS 1.0、TLS 1.1、TLS 1.2之间的区别](https://blog.csdn.net/mrpre/article/details/77978293)<br>
 [SSL与TLS区别以及介绍](https://blog.csdn.net/adrian169/article/details/9164385)<br>
-
+[Maven下载](http://maven.apache.org/download.cgi)<br>
+[Maven中settings详解](https://www.cnblogs.com/hongmoshui/p/10762272.html)<br>
+[Maven中settings配置阿里云](https://github.com/Vico-cuiym/TLSSocketConnectionHttps.github.io/blob/master/com/mvn/settings.xml)<br>
 
 
 
